@@ -5,52 +5,80 @@ import 'package:daily_planner_app/helper/google_api_handler.dart';
 import 'package:daily_planner_app/models/assets.dart';
 import 'package:flutter/material.dart';
 import 'package:extension_google_sign_in_as_googleapis_auth/extension_google_sign_in_as_googleapis_auth.dart';
-import 'package:google_sign_in/google_sign_in.dart';
 
 class SigninHandlerScreen extends StatefulWidget {
   @override
-  State createState() => SigninHandlerScreenState();
+  State createState() => _SigninHandlerScreenState();
 }
 
-class SigninHandlerScreenState extends State<SigninHandlerScreen> {
-  GoogleAPIHandler api = GoogleAPIHandler();
+class _SigninHandlerScreenState extends State<SigninHandlerScreen> {
+  GoogleAPIHandler _api = GoogleAPIHandler();
+  bool _isLoading = true;
 
   @override
   void initState() {
     super.initState();
-    api.googleSignIn.onCurrentUserChanged.listen((GoogleSignInAccount account) {
-      api.currentUser = account;
-      if (api.currentUser != null) {
-        _handleSignedIn();
+    _handleAutoSignin();
+  }
+
+  void _handleAutoSignin() async {
+    try {
+      await _api.googleSignIn.signInSilently();
+
+      // Check signed-in
+      var user = _api.googleSignIn.currentUser;
+      if (user != null) {
+        _handleSignedIn("auto");
+      } else {
+        setState(() {
+          _isLoading = false;
+        });
       }
-    });
-    api.googleSignIn.signInSilently();
-    api.currentUser = api.googleSignIn.currentUser;
-    if (api.currentUser != null) {
-      _handleSignedIn();
+    } catch (error) {
+      print(error);
     }
   }
 
-  void _handleSignedIn() {
-    // Build Snack Bar
-    var userEmail = api.currentUser.email;
-    final SnackBar snackBar = SnackBar(
-        content: Text("Signed-in to $userEmail account successfully!"));
+  void _handleSignedIn(String type) async {
+    // Set Current user
+    _api.currentUser = _api.googleSignIn.currentUser;
+    // Set API Client
+    _api.client = await _api.googleSignIn.authenticatedClient();
 
-    // Show Snack Bar
+    // Show Signed-in Snack Bar
+    var userEmail = _api.currentUser.email;
+    final SnackBar snackBar =
+        SnackBar(content: Text("Signed-in as $userEmail."));
     scaffoldMessengerKey.currentState.showSnackBar(snackBar);
-    // Navigate to next screen
-    navigatorKey.currentState.pushReplacementNamed('/home');
+
+    // // Navigate to next screen based on sign in type
+    if (type == "auto")
+      navigatorKey.currentState.pushReplacementNamed('/home');
+    else if (type == "manual")
+      navigatorKey.currentState.pushReplacementNamed('/choose_calendar');
   }
 
-  Future<void> _handleSignIn() async {
+  Future<void> _onPressSignIn() async {
+    setState(() {
+      _isLoading = true;
+    });
     try {
-      await api.googleSignIn.signIn();
+      await _api.googleSignIn.signIn();
 
-      // Set API Client
-      api.client = await api.googleSignIn.authenticatedClient();
+      // Check signed-in
+      var user = _api.googleSignIn.currentUser;
+      if (user != null) {
+        _handleSignedIn("manual");
+      } else {
+        // Show Sign-in Failed Snackbar
+        final SnackBar snackbar =
+            SnackBar(content: Text("Couldn't sign-in. Please try again."));
+        scaffoldMessengerKey.currentState.showSnackBar(snackbar);
 
-      _handleSignedIn();
+        setState(() {
+          _isLoading = false;
+        });
+      }
     } catch (error) {
       print(error);
     }
@@ -77,22 +105,25 @@ class SigninHandlerScreenState extends State<SigninHandlerScreen> {
           SizedBox(
             height: 185.0,
           ),
-          ElevatedButton(
-            child: const Text('SIGN IN',
-                style: TextStyle(
-                  fontFamily: 'Futura',
-                  fontSize: 38,
-                )),
-            style: ButtonStyle(
-                padding: MaterialStateProperty.all<EdgeInsets>(
-                    EdgeInsets.only(top: 15, left: 40, bottom: 15, right: 40)),
-                foregroundColor: MaterialStateProperty.all<Color>(Colors.white),
-                backgroundColor: MaterialStateProperty.all<Color>(Colors.black),
-                shape: MaterialStateProperty.all<RoundedRectangleBorder>(
-                    RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(28.0),
-                ))),
-            onPressed: () => _handleSignIn(),
+          ConstrainedBox(
+            constraints: BoxConstraints(minHeight: 80.0, minWidth: 75.0),
+            child: (_isLoading
+                ? SizedBox(
+                    child: CircularProgressIndicator(
+                      valueColor: AlwaysStoppedAnimation<Color>(Colors.grey),
+                      strokeWidth: 6.0,
+                    ),
+                    height: 80.0,
+                    width: 80.0,
+                  )
+                : TextButton(
+                    child: const Text('SIGN IN',
+                        style: TextStyle(
+                          fontFamily: 'Futura',
+                          fontSize: 38,
+                        )),
+                    onPressed: () => _onPressSignIn(),
+                  )),
           ),
         ],
       )),

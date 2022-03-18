@@ -33,6 +33,8 @@ dependencies:
   extension_google_sign_in_as_googleapis_auth: ^2.0.4
   uuid: ^3.0.6
   flutter_svg: ^1.0.0
+  shared_preferences: ^2.0.7
+  scroll_snap_list: ^0.8.4
 
 dev_dependencies:
   flutter_test:
@@ -70,8 +72,12 @@ flutter:
     - family: Futura
       fonts:
         - asset: fonts/Futura-Regular.ttf
+    - family: FuturaLight
+      fonts:
         - asset: fonts/Futura-Light.ttf
-          weight: 100
+    - family: CustomIcons
+      fonts:
+        - asset: fonts/CustomIcons.ttf
   #   - family: Trajan Pro
   #     fonts:
   #       - asset: fonts/TrajanPro.ttf
