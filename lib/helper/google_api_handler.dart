@@ -1,6 +1,8 @@
 import 'dart:async';
 
+import 'package:daily_planner_app/models/calendar.dart';
 import 'package:flutter/material.dart';
+import 'package:googleapis/people/v1.dart';
 import 'package:uuid/uuid.dart';
 import 'package:extension_google_sign_in_as_googleapis_auth/extension_google_sign_in_as_googleapis_auth.dart';
 import 'package:google_sign_in/google_sign_in.dart';
@@ -43,43 +45,19 @@ class GoogleAPIHandler {
 
   GoogleAPIHandler._createInstance(this.uuid);
 
-  // Future<void> _handleGetCalendarsList(GoogleSignInAccount user) async {
-  //   setState(() {
-  //     _calendarsText = 'Loading contact info...';
-  //   });
-  //   final http.Response response = await http.get(
-  //     Uri.parse('https://www.googleapis.com/calendar/v3/users/me/calendarList'),
-  //     headers: await user.authHeaders,
-  //   );
+  Future<List<CalendarModel>> getCalendarList() async {
+    final CalendarApi api = CalendarApi(client);
 
-  //   // TODO Handle API response exception
-  //   if (response.statusCode != 200) {
-  //     setState(() {
-  //       _calendarsText = 'People API gave a ${response.statusCode} '
-  //           'response. Check logs for details.';
-  //     });
-  //     print('People API ${response.statusCode} response: ${response.body}');
-  //     return;
-  //   }
-  //   List<Calendar> calendars;
+    final CalendarList fetchedCalendarList = await api.calendarList.list();
 
-  //   final Map<String, dynamic> data =
-  //       json.decode(response.body) as Map<String, dynamic>;
+    List<CalendarModel> calendarList = [];
+    for (dynamic item in fetchedCalendarList.items) {
+      CalendarModel calendar = CalendarModel.mapCalendarListEntry(item);
+      calendarList.add(calendar);
+    }
 
-  //   final List<dynamic> calendarItems = data["items"] as List<dynamic>;
-
-  //   for (dynamic item in calendarItems) {
-
-  //   }
-
-  //   setState(() {
-  //     if (namedContact != null) {
-  //       _calendarsText = ;
-  //     } else {
-  //       _calendarsText = 'No contacts to display.';
-  //     }
-  //   });
-  // }
+    return calendarList;
+  }
 
   // String _calendarListMapper(Map<String, dynamic> data) {
   //   final List<dynamic> calendarItems = data['items'] as List<dynamic>;
