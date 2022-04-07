@@ -1,10 +1,8 @@
 import 'dart:async';
 
 import 'package:daily_planner_app/models/calendar.dart';
-import 'package:flutter/material.dart';
-import 'package:googleapis/people/v1.dart';
+import 'package:daily_planner_app/models/task.dart';
 import 'package:uuid/uuid.dart';
-import 'package:extension_google_sign_in_as_googleapis_auth/extension_google_sign_in_as_googleapis_auth.dart';
 import 'package:google_sign_in/google_sign_in.dart';
 import 'package:googleapis/calendar/v3.dart';
 import 'package:googleapis_auth/googleapis_auth.dart' as auth show AuthClient;
@@ -59,22 +57,37 @@ class GoogleAPIHandler {
     return calendarList;
   }
 
-  // String _calendarListMapper(Map<String, dynamic> data) {
-  //   final List<dynamic> calendarItems = data['items'] as List<dynamic>;
-  //   final Map<List<String>, List<dynamic>> contact = calendarItems != null
-  //       ? calendarItems.map((calendar) => )
-  //       : null;
-  //   if (contact != null) {
-  //     final Map<String, dynamic> name = contact['names'].firstWhere(
-  //       (dynamic name) => name['displayName'] != null,
-  //       orElse: () => null,
-  //     );
-  //     if (name != null) {
-  //       return name['displayName'] as String;
-  //     }
-  //   }
-  //   return null;
-  // }
+  Future<List<TaskModel>> getEventList(CalendarModel calendar) async {
+    final CalendarApi api = CalendarApi(client);
+
+    final DateTime now = DateTime.now();
+    final Events events = await api.events.list(
+      calendar.id,
+      singleEvents: true,
+      orderBy: "startTime",
+      timeMin: DateTime(now.year, now.month, now.day - 1).toUtc(),
+      timeMax: DateTime(now.year, now.month, now.day + 1).toUtc(),
+    );
+
+    final Colors colors = await api.colors.get();
+
+    List<TaskModel> calendarTaskList = [];
+    for (Event event in events.items) {
+      if (event.end.dateTime == null) {
+        continue;
+      }
+      int colorInt = (event.colorId != null)
+          ? int.parse("0xff" +
+              colors.event[event.colorId.toString()].background
+                  .replaceAll("#", ""))
+          : int.parse(
+              "0xff" + colors.event["1"].background.replaceAll("#", ""));
+      calendarTaskList.add(TaskModel.fromEventsItem(
+          event, colorInt, calendar.title.substring(0, 4)));
+    }
+
+    return calendarTaskList;
+  }
 
   // Future<void> signOut() => _googleSignIn.disconnect();
 }
