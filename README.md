@@ -7,10 +7,13 @@ Support for Google Calendar API which lets users connect their google calendars 
 
 ## Screens
 ### Sign-in Screen
-![SignIn.png](/design_snapshots/SignIn.png)
-### Choose Calendar Screen
-![ChooseCalendar.png](/design_snapshots/ChooseCalendar.png)
-### Tasklist Screen
-![ChooseCalendar.png](/design_snapshots/Tasklist.png)
+<img src="/design_snapshots/SignIn.png" alt="SignIn.png" style="width: 200px;" />
 
-#### App under development, posting regular updates.
+### Choose Calendar Screen
+<img src="/design_snapshots/ChooseCalendar.png" alt="ChooseCalendar.png" style="width: 200px;"/>
+
+### Tasklist Screen
+<img src="/design_snapshots/Tasklist.png" alt="Tasklist.png" style="width: 200px;"/>
+
+
+#### App under development, pushing feature updates regularly.
